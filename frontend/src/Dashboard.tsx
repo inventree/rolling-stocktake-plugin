@@ -1,12 +1,14 @@
 // Import for type checking
 import {
   checkPluginVersion,
+  getDetailUrl,
   type InvenTreePluginContext,
   ModelType
 } from '@inventreedb/ui';
 import {
   ActionIcon,
   Alert,
+  Anchor,
   Divider,
   Group,
   Loader,
@@ -41,38 +43,65 @@ function RenderStockItem({
   return (
     <Stack gap='xs'>
       <Table>
-        <Table.Tr>
-          <Table.Th>Item</Table.Th>
-          <Table.Td>
-            {context.renderInstance({
-              instance: item,
-              model: ModelType.stockitem
-            })}
-          </Table.Td>
-        </Table.Tr>
-        <Table.Tr>
-          <Table.Th>Location</Table.Th>
-          <Table.Td>
-            {item.location_detail ? (
-              context.renderInstance({
-                instance: item.location_detail,
-                model: ModelType.stocklocation
-              })
-            ) : (
-              <Text size='sm'>No location data</Text>
-            )}
-          </Table.Td>
-        </Table.Tr>
-        <Table.Tr>
-          <Table.Th>Last Stocktake</Table.Th>
-          <Table.Td>
-            {item.last_stocktake ? (
-              <Text size='sm'>{item.last_stocktake}</Text>
-            ) : (
-              <Text size='sm'>No stocktake data</Text>
-            )}
-          </Table.Td>
-        </Table.Tr>
+        <Table.Tbody>
+          <Table.Tr>
+            <Table.Th>
+              <Anchor
+                href={getDetailUrl(ModelType.stockitem, item.pk, true)}
+                onClick={() =>
+                  context.navigate(getDetailUrl(ModelType.stockitem, item.pk))
+                }
+              >
+                Stock Item
+              </Anchor>
+            </Table.Th>
+            <Table.Td>
+              {context.renderInstance({
+                instance: item,
+                model: ModelType.stockitem
+              })}
+            </Table.Td>
+          </Table.Tr>
+          {item.location_detail && (
+            <Table.Tr>
+              <Table.Th>
+                <Anchor
+                  href={getDetailUrl(
+                    ModelType.stocklocation,
+                    item.location,
+                    true
+                  )}
+                  onClick={() =>
+                    context.navigate(
+                      getDetailUrl(ModelType.stocklocation, item.location)
+                    )
+                  }
+                >
+                  Location
+                </Anchor>
+              </Table.Th>
+              <Table.Td>
+                {context.renderInstance({
+                  instance: item.location_detail,
+                  model: ModelType.stocklocation,
+                  extra: {
+                    show_location: false
+                  }
+                })}
+              </Table.Td>
+            </Table.Tr>
+          )}
+          <Table.Tr>
+            <Table.Th>Last Stocktake</Table.Th>
+            <Table.Td>
+              {item.last_stocktake ? (
+                <Text size='sm'>{item.last_stocktake}</Text>
+              ) : (
+                <Text size='sm'>No stocktake data</Text>
+              )}
+            </Table.Td>
+          </Table.Tr>
+        </Table.Tbody>
       </Table>
     </Stack>
   );
