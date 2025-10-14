@@ -36,7 +36,7 @@ class RollingStocktake(
     LICENSE = "MIT"
 
     # Optionally specify supported InvenTree versions
-    MIN_VERSION = "1.0.0"
+    MIN_VERSION = "1.1.0"
     MAX_VERSION = "2.0.0"
 
     # Scheduled tasks (from ScheduleMixin)
