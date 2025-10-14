@@ -1,33 +1,126 @@
 // Import for type checking
 import {
   checkPluginVersion,
-  type InvenTreePluginContext
+  type InvenTreePluginContext,
+  ModelType
 } from '@inventreedb/ui';
-import { Button, SimpleGrid, Text } from '@mantine/core';
-import { useState } from 'react';
+import {
+  ActionIcon,
+  Alert,
+  Divider,
+  Group,
+  Loader,
+  Stack,
+  Table,
+  Text,
+  Title
+} from '@mantine/core';
+import { IconRefresh } from '@tabler/icons-react';
+import { QueryClient, useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
 
-/**
- * Render a custom dashboard item with the provided context
- * Refer to the InvenTree documentation for the context interface
- * https://docs.inventree.org/en/stable/extend/plugins/ui/#plugin-context
- */
+const queryClient = new QueryClient();
+
+const NEXT_ITEM_URL: string = '/plugin/rolling-stocktake/next/';
+
+function RenderStockItem({
+  context,
+  item
+}: {
+  context: InvenTreePluginContext;
+  item: any;
+}) {
+  if (!item) {
+    return (
+      <Alert color='green' title='All done!'>
+        <Text size='sm'>No more items to count!</Text>
+      </Alert>
+    );
+  }
+
+  return (
+    <Stack gap='xs'>
+      <Table>
+        <Table.Tr>
+          <Table.Th>Item</Table.Th>
+          <Table.Td>
+            {context.renderInstance({
+              instance: item,
+              model: ModelType.stockitem
+            })}
+          </Table.Td>
+        </Table.Tr>
+        <Table.Tr>
+          <Table.Th>Location</Table.Th>
+          <Table.Td>
+            {item.location_detail ? (
+              context.renderInstance({
+                instance: item.location_detail,
+                model: ModelType.stocklocation
+              })
+            ) : (
+              <Text size='sm'>No location data</Text>
+            )}
+          </Table.Td>
+        </Table.Tr>
+        <Table.Tr>
+          <Table.Th>Last Stocktake</Table.Th>
+          <Table.Td>
+            {item.last_stocktake ? (
+              <Text size='sm'>{item.last_stocktake}</Text>
+            ) : (
+              <Text size='sm'>No stocktake data</Text>
+            )}
+          </Table.Td>
+        </Table.Tr>
+      </Table>
+    </Stack>
+  );
+}
+
 function RollingStocktakeDashboardItem({
   context
 }: {
   context: InvenTreePluginContext;
 }) {
-  const [counter, setCounter] = useState<number>(0);
+  const itemQuery = useQuery(
+    {
+      enabled: true,
+      queryKey: ['next-item'],
+      queryFn: async () => {
+        const response = await context.api?.get(NEXT_ITEM_URL);
+        return response.data;
+      }
+    },
+    queryClient
+  );
 
-  const pluginName: string = 'RollingStocktake';
+  const stockItem = useMemo(() => {
+    return itemQuery.data?.item ?? null;
+  }, [itemQuery.data]);
 
   // Render a simple grid of data
   return (
-    <SimpleGrid cols={2} spacing='md'>
-      <Text>Plugin: {pluginName}</Text>
-      <Text>Username: {context.user?.username?.()}</Text>
-      <Text>Counter: {counter}</Text>
-      <Button onClick={() => setCounter(counter + 1)}>+</Button>
-    </SimpleGrid>
+    <Stack gap='xs'>
+      <Group justify='space-between'>
+        <Title c={context.theme.primaryColor} order={3}>
+          Rolling Stocktake
+        </Title>
+        <ActionIcon variant='transparent' onClick={() => itemQuery.refetch()}>
+          <IconRefresh />
+        </ActionIcon>
+      </Group>
+      <Divider />
+      {(itemQuery.isLoading || itemQuery.isFetching) && <Loader size='sm' />}
+      {!itemQuery.isLoading && !itemQuery.isFetching && itemQuery.isError && (
+        <Alert color='red' title='Error'>
+          <Text size='sm'>Error loading stock information from server</Text>
+        </Alert>
+      )}
+      {itemQuery.isSuccess && (
+        <RenderStockItem context={context} item={stockItem} />
+      )}
+    </Stack>
   );
 }
 
