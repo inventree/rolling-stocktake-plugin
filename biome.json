@@ -8,6 +8,13 @@
 			"indentStyle": "space"
 		}
 	},
+	"files": {
+		"includes": [
+			"**",
+			"frontend/src/**",
+			"!frontend/src/locales/**"
+		]
+	},
 	"linter": {
     "rules": {
 		"suspicious" : {

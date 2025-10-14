@@ -34,11 +34,16 @@ class RollingStocktakeView(APIView):
     def get(self, request, *args, **kwargs):
         """Override the GET method to return example data."""
 
-        from stock.models import StockItem
+        from plugin import registry
 
-        # TODO: Select the next stock item to be counted
-        stock_item = StockItem.objects.first()
+        rolling_stocktake_plugin = registry.get_plugin("rolling-stocktake")
 
-        response_serializer = self.serializer_class(instance={"item": stock_item})
+        stock_item = rolling_stocktake_plugin.get_oldest_stock_item(request.user)
+
+        response_serializer = self.serializer_class(
+            instance={
+                "item": stock_item,
+            }
+        )
 
         return Response(response_serializer.data, status=200)
