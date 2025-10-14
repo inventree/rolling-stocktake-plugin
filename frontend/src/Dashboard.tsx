@@ -1,14 +1,13 @@
 // Import for type checking
 import {
   checkPluginVersion,
-  getDetailUrl,
   type InvenTreePluginContext,
   ModelType
 } from '@inventreedb/ui';
 import {
   ActionIcon,
   Alert,
-  Anchor,
+  Button,
   Divider,
   Group,
   Loader,
@@ -17,7 +16,12 @@ import {
   Text,
   Title
 } from '@mantine/core';
-import { IconRefresh } from '@tabler/icons-react';
+import {
+  IconClipboardCheck,
+  IconEye,
+  IconRefresh,
+  IconTrash
+} from '@tabler/icons-react';
 import { QueryClient, useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
@@ -45,16 +49,7 @@ function RenderStockItem({
       <Table>
         <Table.Tbody>
           <Table.Tr>
-            <Table.Th>
-              <Anchor
-                href={getDetailUrl(ModelType.stockitem, item.pk, true)}
-                onClick={() =>
-                  context.navigate(getDetailUrl(ModelType.stockitem, item.pk))
-                }
-              >
-                Stock Item
-              </Anchor>
-            </Table.Th>
+            <Table.Th>Stock Item</Table.Th>
             <Table.Td>
               {context.renderInstance({
                 instance: item,
@@ -64,22 +59,7 @@ function RenderStockItem({
           </Table.Tr>
           {item.location_detail && (
             <Table.Tr>
-              <Table.Th>
-                <Anchor
-                  href={getDetailUrl(
-                    ModelType.stocklocation,
-                    item.location,
-                    true
-                  )}
-                  onClick={() =>
-                    context.navigate(
-                      getDetailUrl(ModelType.stocklocation, item.location)
-                    )
-                  }
-                >
-                  Location
-                </Anchor>
-              </Table.Th>
+              <Table.Th>Location</Table.Th>
               <Table.Td>
                 {context.renderInstance({
                   instance: item.location_detail,
@@ -103,6 +83,22 @@ function RenderStockItem({
           </Table.Tr>
         </Table.Tbody>
       </Table>
+      <Divider />
+      <Group grow>
+        <Button color='blue' variant='light' leftSection={<IconEye />}>
+          View Item
+        </Button>
+        <Button
+          color='green'
+          variant='light'
+          leftSection={<IconClipboardCheck />}
+        >
+          Count Stock
+        </Button>
+        <Button color='red' variant='light' leftSection={<IconTrash />}>
+          Delete Item
+        </Button>
+      </Group>
     </Stack>
   );
 }
