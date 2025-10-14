@@ -46,16 +46,42 @@ class RollingStocktake(
     }
 
     # Plugin settings (from SettingsMixin)
-    # Ref: https://docs.inventree.org/en/latest/plugins/mixins/settings/
     SETTINGS = {
-        # Define your plugin settings here...
-        "CUSTOM_VALUE": {
-            "name": "Custom Value",
-            "description": "A custom value",
-            "validator": int,
-            "default": 42,
-        }
+        "USER_GROUP": {
+            "name": "Allowed Group",
+            "description": "The user group required to participate in perform rolling stocktake",
+            "model": "auth.group",
+        },
+        "IGNORE_EXTERNAL": {
+            "name": "Ignore External Locations",
+            "description": "Ignore stock items which are located in external locations",
+            "default": True,
+            "validator": bool,
+        },
     }
+
+    def get_oldest_stock_item(self, user):
+        """Return the 'oldest' StockItem which should be counted next by the given user."""
+
+        from stock.models import StockItem
+
+        # Start with a list of "in stock" items
+        items = StockItem.objects.filter(StockItem.IN_STOCK_FILTER)
+
+        # Exclude items which are linked to inactive or virtual parts
+        items = items.filter(part__active=True).exclude(part__virtual=True)
+
+        # Optionally filter out items in external locations
+        if self.get_setting("IGNORE_EXTERNAL", backup_value=True):
+            items = items.exclude(location__external=True)
+
+        # TODO: Filter items based on user subscriptions
+
+        # TODO: For items which do not have a "stocktake" date, annotate the "creation" date
+
+        items = items.order_by("stocktake_date")
+
+        return items.first()
 
     # Respond to InvenTree events (from EventMixin)
     # Ref: https://docs.inventree.org/en/latest/plugins/mixins/event/
