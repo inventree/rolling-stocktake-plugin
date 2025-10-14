@@ -21,7 +21,7 @@ class RollingStocktake(
     UserInterfaceMixin,
     InvenTreePlugin,
 ):
-    """RollingStocktake - custom InvenTree plugin."""
+    """RollingStocktake - InvenTree plugin for rolling stocktake functionality."""
 
     # Plugin metadata
     TITLE = "Rolling Stocktake"
@@ -36,8 +36,8 @@ class RollingStocktake(
     LICENSE = "MIT"
 
     # Optionally specify supported InvenTree versions
-    # MIN_VERSION = '0.18.0'
-    # MAX_VERSION = '2.0.0'
+    MIN_VERSION = "1.0.0"
+    MAX_VERSION = "2.0.0"
 
     # Scheduled tasks (from ScheduleMixin)
     # Ref: https://docs.inventree.org/en/latest/plugins/mixins/schedule/
@@ -75,15 +75,16 @@ class RollingStocktake(
     def setup_urls(self):
         """Configure custom URL endpoints for this plugin."""
         from django.urls import path
-        from .views import ExampleView
+        from .views import RollingStocktakeView
 
         return [
             # Provide path to a simple custom view - replace this with your own views
-            path("example/", ExampleView.as_view(), name="example-view"),
+            path(
+                "next/",
+                RollingStocktakeView.as_view(),
+                name="api-rolling-stocktake-view",
+            ),
         ]
-
-    # User interface elements (from UserInterfaceMixin)
-    # Ref: https://docs.inventree.org/en/latest/plugins/mixins/ui/
 
     # Custom dashboard items
     def get_ui_dashboard_items(self, request, context: dict, **kwargs):
