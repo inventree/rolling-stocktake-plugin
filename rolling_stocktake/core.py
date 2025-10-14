@@ -79,6 +79,8 @@ class RollingStocktake(
 
         # TODO: For items which do not have a "stocktake" date, annotate the "creation" date
 
+        # TODO: Randomize the order of items which have the same stocktake date
+
         items = items.order_by("stocktake_date")
 
         return items.first()
@@ -125,15 +127,17 @@ class RollingStocktake(
         items.append({
             "key": "rolling-stocktake-dashboard",
             "title": "Rolling Stocktake Dashboard Item",
-            "description": "Custom dashboard item",
+            "description": "Display a stock item which needs to be counted next",
             "icon": "ti:dashboard:outline",
             "source": self.plugin_static_file(
                 "Dashboard.js:renderRollingStocktakeDashboardItem"
             ),
             "context": {
-                # Provide additional context data to the dashboard item
                 "settings": self.get_settings_dict(),
-                "bar": "foo",
+            },
+            "options": {
+                "width": 4,
+                "height": 3,
             },
         })
 

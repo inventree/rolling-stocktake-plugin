@@ -1,12 +1,14 @@
 // Import for type checking
 import {
   checkPluginVersion,
+  getDetailUrl,
   type InvenTreePluginContext,
   ModelType
 } from '@inventreedb/ui';
 import {
   ActionIcon,
   Alert,
+  Button,
   Divider,
   Group,
   Loader,
@@ -15,9 +17,14 @@ import {
   Text,
   Title
 } from '@mantine/core';
-import { IconRefresh } from '@tabler/icons-react';
+import {
+  IconClipboardCheck,
+  IconEye,
+  IconRefresh,
+  IconTrash
+} from '@tabler/icons-react';
 import { QueryClient, useQuery } from '@tanstack/react-query';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 
 const queryClient = new QueryClient();
 
@@ -25,11 +32,21 @@ const NEXT_ITEM_URL: string = '/plugin/rolling-stocktake/next/';
 
 function RenderStockItem({
   context,
+  onCount,
+  onDelete,
   item
 }: {
   context: InvenTreePluginContext;
   item: any;
+  onCount: () => void;
+  onDelete: () => void;
 }) {
+  const navigateToItem = useCallback(() => {
+    if (item && item.pk) {
+      context.navigate(getDetailUrl(ModelType.stockitem, item.pk));
+    }
+  }, [item]);
+
   if (!item) {
     return (
       <Alert color='green' title='All done!'>
@@ -41,39 +58,69 @@ function RenderStockItem({
   return (
     <Stack gap='xs'>
       <Table>
-        <Table.Tr>
-          <Table.Th>Item</Table.Th>
-          <Table.Td>
-            {context.renderInstance({
-              instance: item,
-              model: ModelType.stockitem
-            })}
-          </Table.Td>
-        </Table.Tr>
-        <Table.Tr>
-          <Table.Th>Location</Table.Th>
-          <Table.Td>
-            {item.location_detail ? (
-              context.renderInstance({
-                instance: item.location_detail,
-                model: ModelType.stocklocation
-              })
-            ) : (
-              <Text size='sm'>No location data</Text>
-            )}
-          </Table.Td>
-        </Table.Tr>
-        <Table.Tr>
-          <Table.Th>Last Stocktake</Table.Th>
-          <Table.Td>
-            {item.last_stocktake ? (
-              <Text size='sm'>{item.last_stocktake}</Text>
-            ) : (
-              <Text size='sm'>No stocktake data</Text>
-            )}
-          </Table.Td>
-        </Table.Tr>
+        <Table.Tbody>
+          <Table.Tr>
+            <Table.Th>Stock Item</Table.Th>
+            <Table.Td>
+              {context.renderInstance({
+                instance: item,
+                model: ModelType.stockitem
+              })}
+            </Table.Td>
+          </Table.Tr>
+          {item.location_detail && (
+            <Table.Tr>
+              <Table.Th>Location</Table.Th>
+              <Table.Td>
+                {context.renderInstance({
+                  instance: item.location_detail,
+                  model: ModelType.stocklocation,
+                  extra: {
+                    show_location: false
+                  }
+                })}
+              </Table.Td>
+            </Table.Tr>
+          )}
+          <Table.Tr>
+            <Table.Th>Last Stocktake</Table.Th>
+            <Table.Td>
+              {item.last_stocktake ? (
+                <Text size='sm'>{item.last_stocktake}</Text>
+              ) : (
+                <Text size='sm'>No stocktake data</Text>
+              )}
+            </Table.Td>
+          </Table.Tr>
+        </Table.Tbody>
       </Table>
+      <Divider />
+      <Group grow>
+        <Button
+          color='blue'
+          variant='light'
+          leftSection={<IconEye />}
+          onClick={navigateToItem}
+        >
+          View Item
+        </Button>
+        <Button
+          color='green'
+          variant='light'
+          leftSection={<IconClipboardCheck />}
+          onClick={onCount}
+        >
+          Count Stock
+        </Button>
+        <Button
+          color='red'
+          variant='light'
+          leftSection={<IconTrash />}
+          onClick={onDelete}
+        >
+          Delete Item
+        </Button>
+      </Group>
     </Stack>
   );
 }
@@ -99,9 +146,23 @@ function RollingStocktakeDashboardItem({
     return itemQuery.data?.item ?? null;
   }, [itemQuery.data]);
 
+  const countStockForm: any = (context.forms as any)?.stockActions?.countStock({
+    items: stockItem ? [stockItem] : [],
+    model: ModelType.stockitem,
+    refresh: () => itemQuery.refetch()
+  });
+
+  const deleteStockForm = (context.forms as any)?.stockActions?.deleteStock({
+    items: stockItem ? [stockItem] : [],
+    model: ModelType.stockitem,
+    refresh: () => itemQuery.refetch()
+  });
+
   // Render a simple grid of data
   return (
     <Stack gap='xs'>
+      {countStockForm.modal}
+      {deleteStockForm.modal}
       <Group justify='space-between'>
         <Title c={context.theme.primaryColor} order={3}>
           Rolling Stocktake
@@ -117,8 +178,13 @@ function RollingStocktakeDashboardItem({
           <Text size='sm'>Error loading stock information from server</Text>
         </Alert>
       )}
-      {itemQuery.isSuccess && (
-        <RenderStockItem context={context} item={stockItem} />
+      {!itemQuery.isLoading && itemQuery.isSuccess && (
+        <RenderStockItem
+          context={context}
+          item={stockItem}
+          onCount={countStockForm.open}
+          onDelete={deleteStockForm.open}
+        />
       )}
     </Stack>
   );
