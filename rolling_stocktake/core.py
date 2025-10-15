@@ -1,5 +1,8 @@
 """Support rolling stocktake for InvenTree"""
 
+from django.db.models import DateField, Min
+from django.db.models.functions import Cast, Coalesce
+
 from plugin import InvenTreePlugin
 
 from plugin.mixins import (
@@ -77,11 +80,22 @@ class RollingStocktake(
 
         # TODO: Filter items based on user subscriptions
 
-        # TODO: For items which do not have a "stocktake" date, annotate the "creation" date
+        # Annotate the "creation" date, based on the oldest StockItemHistory entry
+        items = items.annotate(
+            creation_date=Cast(Min("tracking_info__date"), output_field=DateField())
+        )
+
+        # For items which do not have a "stocktake" date, annotate the "creation" date
+
+        items = items.annotate(
+            oldest_date=Coalesce(
+                "stocktake_date", Min("tracking_info__date"), output_field=DateField()
+            )
+        )
 
         # TODO: Randomize the order of items which have the same stocktake date
 
-        items = items.order_by("stocktake_date")
+        items = items.order_by("oldest_date")
 
         return items.first()
 

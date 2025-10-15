@@ -82,13 +82,23 @@ function RenderStockItem({
               </Table.Td>
             </Table.Tr>
           )}
+          {item.creation_date && (
+            <Table.Tr>
+              <Table.Th>Created</Table.Th>
+              <Table.Td>
+                <Text size='sm'>{item.creation_date}</Text>
+              </Table.Td>
+            </Table.Tr>
+          )}
           <Table.Tr>
             <Table.Th>Last Stocktake</Table.Th>
             <Table.Td>
               {item.last_stocktake ? (
                 <Text size='sm'>{item.last_stocktake}</Text>
               ) : (
-                <Text size='sm'>No stocktake data</Text>
+                <Text c='red' size='sm'>
+                  No stocktake data
+                </Text>
               )}
             </Table.Td>
           </Table.Tr>
@@ -143,7 +153,15 @@ function RollingStocktakeDashboardItem({
   );
 
   const stockItem = useMemo(() => {
-    return itemQuery.data?.item ?? null;
+    let item: any = itemQuery.data?.item ?? {};
+
+    item = {
+      ...item,
+      creation_date: itemQuery?.data?.creation_date ?? null,
+      stocktake_date: itemQuery?.data?.stocktake_date ?? null
+    };
+
+    return item;
   }, [itemQuery.data]);
 
   const countStockForm: any = context?.forms.stockActions.countStock({
@@ -158,7 +176,6 @@ function RollingStocktakeDashboardItem({
     refresh: () => itemQuery.refetch()
   });
 
-  // Render a simple grid of data
   return (
     <Stack gap='xs'>
       {countStockForm?.modal}
