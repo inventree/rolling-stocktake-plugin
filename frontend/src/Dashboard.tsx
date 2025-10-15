@@ -146,13 +146,13 @@ function RollingStocktakeDashboardItem({
     return itemQuery.data?.item ?? null;
   }, [itemQuery.data]);
 
-  const countStockForm: any = (context.forms as any)?.stockActions?.countStock({
+  const countStockForm: any = context?.forms.stockActions.countStock({
     items: stockItem ? [stockItem] : [],
     model: ModelType.stockitem,
     refresh: () => itemQuery.refetch()
   });
 
-  const deleteStockForm = (context.forms as any)?.stockActions?.deleteStock({
+  const deleteStockForm = context?.forms.stockActions.deleteStock({
     items: stockItem ? [stockItem] : [],
     model: ModelType.stockitem,
     refresh: () => itemQuery.refetch()
@@ -161,8 +161,8 @@ function RollingStocktakeDashboardItem({
   // Render a simple grid of data
   return (
     <Stack gap='xs'>
-      {countStockForm.modal}
-      {deleteStockForm.modal}
+      {countStockForm?.modal}
+      {deleteStockForm?.modal}
       <Group justify='space-between'>
         <Title c={context.theme.primaryColor} order={3}>
           Rolling Stocktake
