@@ -12,3 +12,51 @@ msgstr ""
 "Last-Translator: \n"
 "Language-Team: \n"
 "Plural-Forms: \n"
+
+#: src/Dashboard.tsx:56
+msgid "All up to date!"
+msgstr ""
+
+#: src/Dashboard.tsx:57
+msgid "Nice work, you have counted enough items today."
+msgstr ""
+
+#: src/Dashboard.tsx:67
+msgid "Stock Item"
+msgstr ""
+
+#: src/Dashboard.tsx:77
+msgid "Location"
+msgstr ""
+
+#: src/Dashboard.tsx:91
+msgid "Created"
+msgstr ""
+
+#: src/Dashboard.tsx:98
+msgid "Last Stocktake"
+msgstr ""
+
+#: src/Dashboard.tsx:104
+msgid "No stocktake data"
+msgstr ""
+
+#: src/Dashboard.tsx:119
+msgid "View Item"
+msgstr ""
+
+#: src/Dashboard.tsx:127
+msgid "Count Stock"
+msgstr ""
+
+#: src/Dashboard.tsx:135
+msgid "Delete Item"
+msgstr ""
+
+#: src/Dashboard.tsx:191
+msgid "Rolling Stocktake"
+msgstr ""
+
+#: src/Dashboard.tsx:201
+msgid "Error loading stock information from server."
+msgstr ""

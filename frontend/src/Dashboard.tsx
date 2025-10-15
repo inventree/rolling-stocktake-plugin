@@ -5,6 +5,7 @@ import {
   type InvenTreePluginContext,
   ModelType
 } from '@inventreedb/ui';
+import { t } from '@lingui/core/macro';
 import {
   ActionIcon,
   Alert,
@@ -26,6 +27,7 @@ import {
 } from '@tabler/icons-react';
 import { QueryClient, useQuery } from '@tanstack/react-query';
 import { useCallback, useMemo } from 'react';
+import { LocalizedComponent } from './locale';
 
 const queryClient = new QueryClient();
 
@@ -50,8 +52,12 @@ function RenderStockItem({
 
   if (!item.pk) {
     return (
-      <Alert color='green' title='All up to date!' icon={<IconCircleCheck />}>
-        <Text size='sm'>Nice work, you have counted enough items today.</Text>
+      <Alert
+        color='green'
+        title={t`All up to date!`}
+        icon={<IconCircleCheck />}
+      >
+        <Text size='sm'>{t`Nice work, you have counted enough items today.`}</Text>
       </Alert>
     );
   }
@@ -61,7 +67,7 @@ function RenderStockItem({
       <Table>
         <Table.Tbody>
           <Table.Tr>
-            <Table.Th>Stock Item</Table.Th>
+            <Table.Th>{t`Stock Item`}</Table.Th>
             <Table.Td>
               {context.renderInstance({
                 instance: item,
@@ -71,7 +77,7 @@ function RenderStockItem({
           </Table.Tr>
           {item.location_detail && (
             <Table.Tr>
-              <Table.Th>Location</Table.Th>
+              <Table.Th>{t`Location`}</Table.Th>
               <Table.Td>
                 {context.renderInstance({
                   instance: item.location_detail,
@@ -85,20 +91,20 @@ function RenderStockItem({
           )}
           {item.creation_date && (
             <Table.Tr>
-              <Table.Th>Created</Table.Th>
+              <Table.Th>{t`Created`}</Table.Th>
               <Table.Td>
                 <Text size='sm'>{item.creation_date}</Text>
               </Table.Td>
             </Table.Tr>
           )}
           <Table.Tr>
-            <Table.Th>Last Stocktake</Table.Th>
+            <Table.Th>{t`Last Stocktake`}</Table.Th>
             <Table.Td>
               {item.last_stocktake ? (
                 <Text size='sm'>{item.last_stocktake}</Text>
               ) : (
                 <Text c='red' size='sm'>
-                  No stocktake data
+                  {t`No stocktake data`}
                 </Text>
               )}
             </Table.Td>
@@ -113,7 +119,7 @@ function RenderStockItem({
           leftSection={<IconEye />}
           onClick={navigateToItem}
         >
-          View Item
+          {t`View Item`}
         </Button>
         <Button
           color='green'
@@ -121,7 +127,7 @@ function RenderStockItem({
           leftSection={<IconClipboardCheck />}
           onClick={onCount}
         >
-          Count Stock
+          {t`Count Stock`}
         </Button>
         <Button
           color='red'
@@ -129,7 +135,7 @@ function RenderStockItem({
           leftSection={<IconTrash />}
           onClick={onDelete}
         >
-          Delete Item
+          {t`Delete Item`}
         </Button>
       </Group>
     </Stack>
@@ -185,7 +191,7 @@ function RollingStocktakeDashboardItem({
       {deleteStockForm?.modal}
       <Group justify='space-between'>
         <Title c={context.theme.primaryColor} order={4}>
-          Rolling Stocktake
+          {t`Rolling Stocktake`}
         </Title>
         <ActionIcon variant='transparent' onClick={() => itemQuery.refetch()}>
           <IconRefresh />
@@ -195,7 +201,7 @@ function RollingStocktakeDashboardItem({
       {(itemQuery.isLoading || itemQuery.isFetching) && <Loader size='sm' />}
       {!itemQuery.isLoading && !itemQuery.isFetching && itemQuery.isError && (
         <Alert color='red' title='Error'>
-          <Text size='sm'>Error loading stock information from server</Text>
+          <Text size='sm'>{t`Error loading stock information from server.`}</Text>
         </Alert>
       )}
       {!itemQuery.isLoading && itemQuery.isSuccess && (
@@ -216,5 +222,9 @@ export function renderRollingStocktakeDashboardItem(
   context: InvenTreePluginContext
 ) {
   checkPluginVersion(context);
-  return <RollingStocktakeDashboardItem context={context} />;
+  return (
+    <LocalizedComponent locale={context.locale}>
+      <RollingStocktakeDashboardItem context={context} />
+    </LocalizedComponent>
+  );
 }
