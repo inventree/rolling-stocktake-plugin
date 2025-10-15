@@ -1,6 +1,6 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PyPI](https://img.shields.io/pypi/v/inventree-rolling-stocktake)](https://pypi.org/project/inventree-rolling-stocktake/)
-![PEP](https://github.com/inventree/rolling-stocktake-plugin/actions/workflows/pep.yaml/badge.svg)
+![PEP](https://github.com/inventree/rolling-stocktake-plugin/actions/workflows/ci.yaml/badge.svg)
 
 # Rolling Stocktake Plugin
  
