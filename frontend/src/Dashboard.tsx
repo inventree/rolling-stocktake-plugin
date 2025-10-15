@@ -18,6 +18,7 @@ import {
   Title
 } from '@mantine/core';
 import {
+  IconCircleCheck,
   IconClipboardCheck,
   IconEye,
   IconRefresh,
@@ -49,8 +50,8 @@ function RenderStockItem({
 
   if (!item.pk) {
     return (
-      <Alert color='green' title='All up to date!'>
-        <Text size='sm'>No more items to count today.</Text>
+      <Alert color='green' title='All up to date!' icon={<IconCircleCheck />}>
+        <Text size='sm'>Nice work, you have counted enough items today.</Text>
       </Alert>
     );
   }
@@ -183,7 +184,7 @@ function RollingStocktakeDashboardItem({
       {countStockForm?.modal}
       {deleteStockForm?.modal}
       <Group justify='space-between'>
-        <Title c={context.theme.primaryColor} order={3}>
+        <Title c={context.theme.primaryColor} order={4}>
           Rolling Stocktake
         </Title>
         <ActionIcon variant='transparent' onClick={() => itemQuery.refetch()}>
