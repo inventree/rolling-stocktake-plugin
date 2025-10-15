@@ -2,6 +2,7 @@
 
 from django.db.models import DateField, Min
 from django.db.models.functions import Cast, Coalesce
+from django.core.validators import MinValueValidator
 
 from plugin import InvenTreePlugin
 
@@ -55,6 +56,15 @@ class RollingStocktake(
             "description": "The user group required to participate in perform rolling stocktake",
             "model": "auth.group",
         },
+        "DAILY_LIMIT": {
+            "name": "Daily Limit",
+            "description": "The maximum number of stock items to be counted by a user in a single day",
+            "default": 5,
+            "validator": [
+                int,
+                MinValueValidator(0),
+            ],
+        },
         "IGNORE_EXTERNAL": {
             "name": "Ignore External Locations",
             "description": "Ignore stock items which are located in external locations",
@@ -66,7 +76,21 @@ class RollingStocktake(
     def get_oldest_stock_item(self, user):
         """Return the 'oldest' StockItem which should be counted next by the given user."""
 
+        from InvenTree.helpers import current_date
         from stock.models import StockItem
+
+        # First, check if the user has already counted the maximum number of items today
+        daily_limit = int(self.get_setting("DAILY_LIMIT", backup_value=5))
+
+        if daily_limit > 0:
+            stocakes = StockItem.objects.filter(
+                stocktake_date=current_date(),
+                stocktake_user=user,
+            ).count()
+
+            # Already reached the daily limit
+            if stocakes >= daily_limit:
+                return None
 
         # Start with a list of "in stock" items
         items = StockItem.objects.filter(StockItem.IN_STOCK_FILTER)

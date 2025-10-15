@@ -18,6 +18,7 @@ import {
   Title
 } from '@mantine/core';
 import {
+  IconCircleCheck,
   IconClipboardCheck,
   IconEye,
   IconRefresh,
@@ -47,10 +48,10 @@ function RenderStockItem({
     }
   }, [item]);
 
-  if (!item) {
+  if (!item.pk) {
     return (
-      <Alert color='green' title='All done!'>
-        <Text size='sm'>No more items to count!</Text>
+      <Alert color='green' title='All up to date!' icon={<IconCircleCheck />}>
+        <Text size='sm'>Nice work, you have counted enough items today.</Text>
       </Alert>
     );
   }
@@ -155,11 +156,13 @@ function RollingStocktakeDashboardItem({
   const stockItem = useMemo(() => {
     let item: any = itemQuery.data?.item ?? {};
 
-    item = {
-      ...item,
-      creation_date: itemQuery?.data?.creation_date ?? null,
-      stocktake_date: itemQuery?.data?.stocktake_date ?? null
-    };
+    if (item?.pk) {
+      item = {
+        ...item,
+        creation_date: itemQuery?.data?.creation_date ?? null,
+        stocktake_date: itemQuery?.data?.stocktake_date ?? null
+      };
+    }
 
     return item;
   }, [itemQuery.data]);
@@ -181,7 +184,7 @@ function RollingStocktakeDashboardItem({
       {countStockForm?.modal}
       {deleteStockForm?.modal}
       <Group justify='space-between'>
-        <Title c={context.theme.primaryColor} order={3}>
+        <Title c={context.theme.primaryColor} order={4}>
           Rolling Stocktake
         </Title>
         <ActionIcon variant='transparent' onClick={() => itemQuery.refetch()}>
