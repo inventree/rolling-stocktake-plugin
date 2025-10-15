@@ -47,10 +47,10 @@ function RenderStockItem({
     }
   }, [item]);
 
-  if (!item) {
+  if (!item.pk) {
     return (
-      <Alert color='green' title='All done!'>
-        <Text size='sm'>No more items to count!</Text>
+      <Alert color='green' title='All up to date!'>
+        <Text size='sm'>No more items to count today.</Text>
       </Alert>
     );
   }
@@ -155,11 +155,13 @@ function RollingStocktakeDashboardItem({
   const stockItem = useMemo(() => {
     let item: any = itemQuery.data?.item ?? {};
 
-    item = {
-      ...item,
-      creation_date: itemQuery?.data?.creation_date ?? null,
-      stocktake_date: itemQuery?.data?.stocktake_date ?? null
-    };
+    if (item?.pk) {
+      item = {
+        ...item,
+        creation_date: itemQuery?.data?.creation_date ?? null,
+        stocktake_date: itemQuery?.data?.stocktake_date ?? null
+      };
+    }
 
     return item;
   }, [itemQuery.data]);
