@@ -3,12 +3,14 @@ import {
   checkPluginVersion,
   getDetailUrl,
   type InvenTreePluginContext,
-  ModelType
+  ModelType,
+  navigateToLink
 } from '@inventreedb/ui';
 import { t } from '@lingui/core/macro';
 import {
   ActionIcon,
   Alert,
+  Anchor,
   Button,
   Divider,
   Group,
@@ -26,7 +28,7 @@ import {
   IconTrash
 } from '@tabler/icons-react';
 import { QueryClient, useQuery } from '@tanstack/react-query';
-import { useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 import { LocalizedComponent } from './locale';
 
 const queryClient = new QueryClient();
@@ -44,12 +46,6 @@ function RenderStockItem({
   onCount: () => void;
   onDelete: () => void;
 }) {
-  const navigateToItem = useCallback(() => {
-    if (item && item.pk) {
-      context.navigate(getDetailUrl(ModelType.stockitem, item.pk));
-    }
-  }, [item]);
-
   if (!item.pk) {
     return (
       <Alert
@@ -113,15 +109,32 @@ function RenderStockItem({
       </Table>
       <Divider />
       <Group grow>
-        <Button
-          color='blue'
-          variant='light'
-          leftSection={<IconEye />}
-          onClick={navigateToItem}
+        <Anchor
+          href={getDetailUrl(ModelType.stockitem, item.pk, true)}
+          target='_blank'
         >
-          {t`View Item`}
-        </Button>
+          <Button
+            style={{
+              width: '100%'
+            }}
+            color='blue'
+            variant='light'
+            leftSection={<IconEye />}
+            onClick={(event: any) =>
+              navigateToLink(
+                getDetailUrl(ModelType.stockitem, item.pk),
+                context.navigate,
+                event
+              )
+            }
+          >
+            {t`View Item`}
+          </Button>
+        </Anchor>
         <Button
+          style={{
+            width: '100%'
+          }}
           color='green'
           variant='light'
           leftSection={<IconClipboardCheck />}
@@ -130,6 +143,9 @@ function RenderStockItem({
           {t`Count Stock`}
         </Button>
         <Button
+          style={{
+            width: '100%'
+          }}
           color='red'
           variant='light'
           leftSection={<IconTrash />}
