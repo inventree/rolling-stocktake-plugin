@@ -48,16 +48,22 @@ export default defineConfig({
     rollupOptions: {
       preserveEntrySignatures: "exports-only",
       input: [
-        
         './src/Dashboard.tsx',
-        
       ],
-      output: {
-        dir: '../rolling_stocktake/static',
-        entryFileNames: '[name].js',
-        assetFileNames: 'assets/[name].[ext]',
-        globals: externalLibs,
-      },
+      output: [
+        {
+          dir: '../rolling_stocktake/static',
+          entryFileNames: '[name].js',
+          assetFileNames: 'assets/[name].[ext]',
+          globals: externalLibs,
+        },
+        {
+          dir: '../rolling_stocktake/static',
+          entryFileNames: '[name]-[hash].min.js',
+          assetFileNames: 'assets/[name].[ext]',
+          globals: externalLibs,
+        },
+      ],
       external: externalKeys,
     }
   },
