@@ -164,7 +164,7 @@ class RollingStocktake(
 
         items.append({
             "key": "rolling-stocktake-dashboard",
-            "title": "Rolling Stocktake Dashboard Item",
+            "title": "Rolling Stocktake",
             "description": "Display a stock item which needs to be counted next",
             "icon": "ti:dashboard:outline",
             "source": self.plugin_static_file(
