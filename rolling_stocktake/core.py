@@ -14,6 +14,8 @@ from plugin.mixins import (
     UserInterfaceMixin,
 )
 
+from InvenTree.api_version import INVENTREE_API_VERSION
+
 from . import PLUGIN_VERSION
 
 
@@ -104,10 +106,12 @@ class RollingStocktake(
 
         # TODO: Filter items based on user subscriptions
 
-        # Annotate the "creation" date, based on the oldest StockItemHistory entry
-        items = items.annotate(
-            creation_date=Cast(Min("tracking_info__date"), output_field=DateField())
-        )
+        if INVENTREE_API_VERSION < 496:
+            # Annotate the "creation_date" value, based on the oldest StockItemHistory entry
+            # This is a workaround for older InvenTree versions which do not have a "creation_date" field on the StockItem model
+            items = items.annotate(
+                creation_date=Cast(Min("tracking_info__date"), output_field=DateField())
+            )
 
         # For items which do not have a "stocktake" date, annotate the "creation" date
 
