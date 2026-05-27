@@ -175,13 +175,11 @@ class RollingStocktake(
     def wants_process_event(self, event: str) -> bool:
         """Return True if the plugin wants to process the given event."""
         # Example: only process the 'create part' event
-        return event == "part_part.created"
+        return False
 
     def process_event(self, event: str, *args, **kwargs) -> None:
         """Process the provided event."""
-        print("Processing custom event:", event)
-        print("Arguments:", args)
-        print("Keyword arguments:", kwargs)
+        ...
 
     # Custom URL endpoints (from UrlsMixin)
     # Ref: https://docs.inventree.org/en/latest/plugins/mixins/urls/
