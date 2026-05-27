@@ -12,7 +12,7 @@ import {
   Alert,
   Divider,
   Group,
-  Loader,
+  LoadingOverlay,
   Progress,
   Stack,
   Table,
@@ -186,6 +186,7 @@ function RollingStocktakeDashboardItem({
     <Stack gap='xs'>
       {countStockForm?.modal}
       {deleteStockForm?.modal}
+      <LoadingOverlay visible={itemQuery.isLoading || itemQuery.isFetching} />
       <Group justify='space-between'>
         <Group gap='xs' align='center'>
           {displayCreature && <Creature health={health} justFed={justFed} />}
@@ -248,7 +249,6 @@ function RollingStocktakeDashboardItem({
         value={(100 * (itemQuery.data?.user_count ?? 0)) / weeklyLimit}
         size='sm'
       />
-      {(itemQuery.isLoading || itemQuery.isFetching) && <Loader size='sm' />}
       {!itemQuery.isLoading && !itemQuery.isFetching && itemQuery.isError && (
         <Alert color='red' title='Error'>
           <Text size='sm'>{t`Error loading stock information from server.`}</Text>
