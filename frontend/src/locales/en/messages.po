@@ -13,66 +13,74 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/Dashboard.tsx:56
+#: src/Dashboard.tsx
+#~ msgid "Nice work, you have counted enough items today."
+#~ msgstr "Nice work, you have counted enough items today."
+
+#: src/Dashboard.tsx
+#~ msgid "View Item"
+#~ msgstr "View Item"
+
+#: src/Dashboard.tsx
+#~ msgid "Count Stock"
+#~ msgstr "Count Stock"
+
+#: src/Dashboard.tsx
+#~ msgid "Delete Item"
+#~ msgstr "Delete Item"
+
+#: src/Dashboard.tsx
 msgid "All up to date!"
 msgstr "All up to date!"
 
-#: src/Dashboard.tsx:57
-msgid "Nice work, you have counted enough items today."
-msgstr "Nice work, you have counted enough items today."
+#: src/Dashboard.tsx
+msgid "Nice work, you have counted enough items this week."
+msgstr "Nice work, you have counted enough items this week."
 
-#: src/Dashboard.tsx:67
+#: src/Dashboard.tsx
 msgid "Stock Item"
 msgstr "Stock Item"
 
-#: src/Dashboard.tsx:77
+#: src/Dashboard.tsx
 msgid "Location"
 msgstr "Location"
 
-#: src/Dashboard.tsx:91
+#: src/Dashboard.tsx
 msgid "Created"
 msgstr "Created"
 
-#: src/Dashboard.tsx:98
+#: src/Dashboard.tsx
+msgid "Last Updated"
+msgstr "Last Updated"
+
+#: src/Dashboard.tsx
 msgid "Last Stocktake"
 msgstr "Last Stocktake"
 
-#: src/Dashboard.tsx:104
+#: src/Dashboard.tsx
 msgid "No stocktake data"
 msgstr "No stocktake data"
 
-#: src/Dashboard.tsx:119
-msgid "View Item"
-msgstr "View Item"
-
-#: src/Dashboard.tsx:127
-msgid "Count Stock"
-msgstr "Count Stock"
-
-#: src/Dashboard.tsx:135
-msgid "Delete Item"
-msgstr "Delete Item"
-
-#: src/Dashboard.tsx:191
+#: src/Dashboard.tsx
 msgid "Rolling Stocktake"
 msgstr "Rolling Stocktake"
 
-#: src/Dashboard.tsx:201
+#: src/Dashboard.tsx
 msgid "Error loading stock information from server."
 msgstr "Error loading stock information from server."
 
-#: src/Panel.tsx:96
+#: src/Panel.tsx
 #~ msgid "Translated Text"
 #~ msgstr "Translated Text"
 
-#: src/Panel.tsx:97
+#: src/Panel.tsx
 #~ msgid "Translated text, provided by custom code!"
 #~ msgstr "Translated text, provided by custom code!"
 
-#: src/Panel.tsx:98
+#: src/Panel.tsx
 #~ msgid "Translations are loaded automatically."
 #~ msgstr "Translations are loaded automatically."
 
-#: src/Panel.tsx:99
+#: src/Panel.tsx
 #~ msgid "Fallback locale is used if no translation is available"
 #~ msgstr "Fallback locale is used if no translation is available"
