@@ -30,6 +30,10 @@ msgstr ""
 #~ msgstr "Delete Item"
 
 #: src/Dashboard.tsx
+#~ msgid "Created"
+#~ msgstr "Created"
+
+#: src/Dashboard.tsx
 msgid "All up to date!"
 msgstr "All up to date!"
 
@@ -46,8 +50,8 @@ msgid "Location"
 msgstr "Location"
 
 #: src/Dashboard.tsx
-msgid "Created"
-msgstr "Created"
+msgid "Creation Date"
+msgstr "Creation Date"
 
 #: src/Dashboard.tsx
 msgid "Last Updated"
