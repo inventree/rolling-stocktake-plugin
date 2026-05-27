@@ -21,7 +21,7 @@ jobs:
       - name: Compile Translations
         run: |
           cd frontend
-          npm run compile
+          npm run translate
       - name: Check for Uncommitted Changes
         run: |
           git diff --exit-code frontend/src/locales
