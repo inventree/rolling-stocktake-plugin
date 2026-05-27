@@ -168,8 +168,6 @@ class RollingStocktake(
 
         items = list(items[:pool_size])
 
-        print("Items:", items)
-
         return random.choice(items) if items else None
 
     # Respond to InvenTree events (from EventMixin)
