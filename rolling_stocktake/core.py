@@ -58,13 +58,13 @@ class RollingStocktake(
             "description": "The user group required to participate in perform rolling stocktake",
             "model": "auth.group",
         },
-        "DAILY_LIMIT": {
-            "name": "Daily Limit",
-            "description": "The maximum number of stock items to be counted by a user in a single day",
+        "WEEKLY_LIMIT": {
+            "name": "Weekly Limit",
+            "description": "The maximum number of stock items to be counted by a user in a single week",
             "default": 5,
             "validator": [
                 int,
-                MinValueValidator(0),
+                MinValueValidator(1),
             ],
         },
         "IGNORE_EXTERNAL": {
@@ -81,24 +81,31 @@ class RollingStocktake(
         },
     }
 
-    def get_oldest_stock_item(self, user):
-        """Return the 'oldest' StockItem which should be counted next by the given user."""
+    def get_stocktake_count_for_user(self, user):
+        """Return the number of stock items which have been counted by the given user within the current week."""
 
         from InvenTree.helpers import current_date
         from stock.models import StockItem
 
-        # First, check if the user has already counted the maximum number of items today
-        daily_limit = int(self.get_setting("DAILY_LIMIT", backup_value=5))
+        if not user:
+            return 0
 
-        if daily_limit > 0:
-            stocakes = StockItem.objects.filter(
-                stocktake_date=current_date(),
-                stocktake_user=user,
-            ).count()
+        return StockItem.objects.filter(
+            stocktake_date__week=current_date().isocalendar()[1],
+            stocktake_user=user,
+        ).count()
 
-            # Already reached the daily limit
-            if stocakes >= daily_limit:
-                return None
+    def get_oldest_stock_item(self, user):
+        """Return the 'oldest' StockItem which should be counted next by the given user."""
+
+        from stock.models import StockItem
+
+        # First, check if the user has already counted the maximum number of items this week
+        weekly_limit = int(self.get_setting("WEEKLY_LIMIT", backup_value=5))
+
+        if weekly_limit > 0 and self.get_stocktake_count_for_user(user) >= weekly_limit:
+            # Already reached the weekly limit
+            return None
 
         # Start with a list of "in stock" items
         items = StockItem.objects.filter(StockItem.IN_STOCK_FILTER)
