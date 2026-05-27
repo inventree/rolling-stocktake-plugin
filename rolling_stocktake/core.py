@@ -73,6 +73,12 @@ class RollingStocktake(
             "default": True,
             "validator": bool,
         },
+        "IGNORE_INACTIVE": {
+            "name": "Ignore Inactive Parts",
+            "description": "Ignore stock items which belong to inactive parts",
+            "default": True,
+            "validator": bool,
+        },
     }
 
     def get_oldest_stock_item(self, user):
@@ -97,8 +103,12 @@ class RollingStocktake(
         # Start with a list of "in stock" items
         items = StockItem.objects.filter(StockItem.IN_STOCK_FILTER)
 
-        # Exclude items which are linked to inactive or virtual parts
-        items = items.filter(part__active=True).exclude(part__virtual=True)
+        # Exclude virtual parts
+        items = items.exclude(part__virtual=True)
+
+        # Optionally ignore inactive parts
+        if self.get_setting("IGNORE_INACTIVE"):
+            items = items.filter(part__active=True)
 
         # Optionally filter out items in external locations
         if self.get_setting("IGNORE_EXTERNAL", backup_value=True):
