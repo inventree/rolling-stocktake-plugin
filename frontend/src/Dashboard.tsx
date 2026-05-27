@@ -125,6 +125,10 @@ function RollingStocktakeDashboardItem({
     return context.context?.settings?.WEEKLY_LIMIT ?? 0;
   }, [context.context?.settings]);
 
+  const displayCreature = useMemo(() => {
+    return context.context?.settings?.DISPLAY_CREATURE ?? false;
+  }, [context.context?.settings]);
+
   const itemQuery = useQuery(
     {
       enabled: true,
@@ -184,7 +188,7 @@ function RollingStocktakeDashboardItem({
       {deleteStockForm?.modal}
       <Group justify='space-between'>
         <Group gap='xs' align='center'>
-          <Creature health={health} justFed={justFed} />
+          {displayCreature && <Creature health={health} justFed={justFed} />}
           <Title c={context.theme.primaryColor} order={4}>
             {t`Rolling Stocktake`}
           </Title>
