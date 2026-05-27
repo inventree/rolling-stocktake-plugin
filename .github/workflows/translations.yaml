@@ -1,0 +1,27 @@
+# Check that compiled translation catalogs are up-to-date with source strings
+
+name: Translation Check
+
+on: ["push", "pull_request"]
+
+jobs:
+  translations:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+      - name: Install Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "20"
+      - name: Install Dependencies
+        run: |
+          cd frontend
+          npm install
+      - name: Compile Translations
+        run: |
+          cd frontend
+          npm run compile
+      - name: Check for Uncommitted Changes
+        run: |
+          git diff --exit-code frontend/src/locales
