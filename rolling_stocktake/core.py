@@ -1,5 +1,7 @@
 """Support rolling stocktake for InvenTree"""
 
+import random
+
 from django.db.models import DateField, Min
 from django.db.models.functions import Cast, Coalesce
 from django.core.validators import MinValueValidator
@@ -65,6 +67,15 @@ class RollingStocktake(
             "validator": [
                 int,
                 MinValueValidator(1),
+            ],
+        },
+        "RANDOM_POOL_SIZE": {
+            "name": "Random Pool",
+            "description": "The size of the pool of items to select from when randomizing the order of items to be counted (0 to disable randomization)",
+            "default": 5,
+            "validator": [
+                int,
+                MinValueValidator(0),
             ],
         },
         "IGNORE_EXTERNAL": {
@@ -144,11 +155,22 @@ class RollingStocktake(
             )
         )
 
-        # TODO: Randomize the order of items which have the same stocktake date
-
         items = items.order_by("oldest_date")
 
-        return items.first()
+        if items.count() == 0:
+            return None
+
+        pool_size = self.get_setting("RANDOM_POOL_SIZE")
+
+        # No randomness - always return the oldest item
+        if pool_size == 0:
+            return items.first()
+
+        items = list(items[:pool_size])
+
+        print("Items:", items)
+
+        return random.choice(items) if items else None
 
     # Respond to InvenTree events (from EventMixin)
     # Ref: https://docs.inventree.org/en/latest/plugins/mixins/event/
