@@ -30,6 +30,10 @@ msgstr ""
 #~ msgstr ""
 
 #: src/Dashboard.tsx
+#~ msgid "Created"
+#~ msgstr ""
+
+#: src/Dashboard.tsx
 msgid "All up to date!"
 msgstr ""
 
@@ -46,7 +50,7 @@ msgid "Location"
 msgstr ""
 
 #: src/Dashboard.tsx
-msgid "Created"
+msgid "Creation Date"
 msgstr ""
 
 #: src/Dashboard.tsx
