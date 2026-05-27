@@ -26,10 +26,10 @@ class RollingStocktakeSerializer(serializers.Serializer):
         allow_null=True,
     )
 
-    stocktake_date = serializers.DateField(
+    stocktake_date = serializers.DateTimeField(
         source="item.stocktake_date", read_only=True, allow_null=True
     )
 
-    creation_date = serializers.DateField(
+    creation_date = serializers.DateTimeField(
         source="item.creation_date", read_only=True, allow_null=True
     )
