@@ -40,10 +40,14 @@ class RollingStocktakeView(APIView):
 
         stock_item = rolling_stocktake_plugin.get_oldest_stock_item(request.user)
 
+        user_count = (
+            rolling_stocktake_plugin.get_stocktake_count_for_user(request.user)
+            if request.user
+            else 0
+        )
+
         response_serializer = self.serializer_class(
-            instance={
-                "item": stock_item,
-            }
+            instance={"item": stock_item, "user_count": user_count}
         )
 
         return Response(response_serializer.data, status=200)

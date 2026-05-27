@@ -18,6 +18,7 @@ class RollingStocktakeSerializer(serializers.Serializer):
             "item",
             "stocktake_date",
             "creation_date",
+            "user_count",
         ]
 
     item = StockItemSerializer(
@@ -32,4 +33,9 @@ class RollingStocktakeSerializer(serializers.Serializer):
 
     creation_date = serializers.DateTimeField(
         source="item.creation_date", read_only=True, allow_null=True
+    )
+
+    # The number of items the user has "counted" within the specified period
+    user_count = serializers.IntegerField(
+        read_only=True,
     )

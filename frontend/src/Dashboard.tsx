@@ -13,6 +13,7 @@ import {
   Divider,
   Group,
   Loader,
+  Progress,
   Stack,
   Table,
   Text,
@@ -48,7 +49,7 @@ function RenderStockItem({
         title={t`All up to date!`}
         icon={<IconCircleCheck />}
       >
-        <Text size='sm'>{t`Nice work, you have counted enough items today.`}</Text>
+        <Text size='sm'>{t`Nice work, you have counted enough items this week.`}</Text>
       </Alert>
     );
   }
@@ -119,6 +120,10 @@ function RollingStocktakeDashboardItem({
 }: {
   context: InvenTreePluginContext;
 }) {
+  const weeklyLimit = useMemo(() => {
+    return context.context?.settings?.WEEKLY_LIMIT ?? 0;
+  }, [context.context?.settings]);
+
   const itemQuery = useQuery(
     {
       enabled: true,
@@ -210,6 +215,10 @@ function RollingStocktakeDashboardItem({
         </Group>
       </Group>
       <Divider />
+      <Progress
+        value={(100 * (itemQuery.data?.user_count ?? 0)) / weeklyLimit}
+        size='sm'
+      />
       {(itemQuery.isLoading || itemQuery.isFetching) && <Loader size='sm' />}
       {!itemQuery.isLoading && !itemQuery.isFetching && itemQuery.isError && (
         <Alert color='red' title='Error'>
