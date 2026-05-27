@@ -24,4 +24,9 @@ jobs:
           npm run translate
       - name: Check for Uncommitted Changes
         run: |
-          git diff --exit-code frontend/src/locales
+          if ! git diff --exit-code frontend/src/locales; then
+            echo ""
+            echo "ERROR: Translation catalogs are out of date."
+            echo "Run 'cd frontend && npm run translate' and commit the updated files in src/locales."
+            exit 1
+          fi
