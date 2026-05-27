@@ -93,6 +93,14 @@ function RenderStockItem({
               </Table.Td>
             </Table.Tr>
           )}
+          {item.updated && (
+            <Table.Tr>
+              <Table.Th>{t`Last Updated`}</Table.Th>
+              <Table.Td>
+                <Text size='sm'>{item.updated}</Text>
+              </Table.Td>
+            </Table.Tr>
+          )}
           <Table.Tr>
             <Table.Th>{t`Last Stocktake`}</Table.Th>
             <Table.Td>
