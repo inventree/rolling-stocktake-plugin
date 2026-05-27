@@ -10,15 +10,14 @@ import { t } from '@lingui/core/macro';
 import {
   ActionIcon,
   Alert,
-  Anchor,
-  Button,
   Divider,
   Group,
   Loader,
   Stack,
   Table,
   Text,
-  Title
+  Title,
+  Tooltip
 } from '@mantine/core';
 import {
   IconCircleCheck,
@@ -37,14 +36,10 @@ const NEXT_ITEM_URL: string = '/plugin/rolling-stocktake/next/';
 
 function RenderStockItem({
   context,
-  onCount,
-  onDelete,
   item
 }: {
   context: InvenTreePluginContext;
   item: any;
-  onCount: () => void;
-  onDelete: () => void;
 }) {
   if (!item.pk) {
     return (
@@ -115,53 +110,6 @@ function RenderStockItem({
           </Table.Tr>
         </Table.Tbody>
       </Table>
-      <Divider />
-      <Group grow>
-        <Anchor
-          href={getDetailUrl(ModelType.stockitem, item.pk, true)}
-          target='_blank'
-        >
-          <Button
-            style={{
-              width: '100%'
-            }}
-            color='blue'
-            variant='light'
-            leftSection={<IconEye />}
-            onClick={(event: any) =>
-              navigateToLink(
-                getDetailUrl(ModelType.stockitem, item.pk),
-                context.navigate,
-                event
-              )
-            }
-          >
-            {t`View Item`}
-          </Button>
-        </Anchor>
-        <Button
-          style={{
-            width: '100%'
-          }}
-          color='green'
-          variant='light'
-          leftSection={<IconClipboardCheck />}
-          onClick={onCount}
-        >
-          {t`Count Stock`}
-        </Button>
-        <Button
-          style={{
-            width: '100%'
-          }}
-          color='red'
-          variant='light'
-          leftSection={<IconTrash />}
-          onClick={onDelete}
-        >
-          {t`Delete Item`}
-        </Button>
-      </Group>
     </Stack>
   );
 }
@@ -217,9 +165,49 @@ function RollingStocktakeDashboardItem({
         <Title c={context.theme.primaryColor} order={4}>
           {t`Rolling Stocktake`}
         </Title>
-        <ActionIcon variant='transparent' onClick={() => itemQuery.refetch()}>
-          <IconRefresh />
-        </ActionIcon>
+        <Group justify='right'>
+          <Tooltip label='View item'>
+            <ActionIcon
+              color='blue'
+              variant='transparent'
+              onClick={(event: any) =>
+                navigateToLink(
+                  getDetailUrl(ModelType.stockitem, stockItem.pk),
+                  context.navigate,
+                  event
+                )
+              }
+            >
+              <IconEye />
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip label='Count item'>
+            <ActionIcon
+              color='green'
+              variant='transparent'
+              onClick={() => countStockForm.open()}
+            >
+              <IconClipboardCheck />
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip label='Delete item'>
+            <ActionIcon
+              color='red'
+              variant='transparent'
+              onClick={() => deleteStockForm.open()}
+            >
+              <IconTrash />
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip label='Refresh'>
+            <ActionIcon
+              variant='transparent'
+              onClick={() => itemQuery.refetch()}
+            >
+              <IconRefresh />
+            </ActionIcon>
+          </Tooltip>
+        </Group>
       </Group>
       <Divider />
       {(itemQuery.isLoading || itemQuery.isFetching) && <Loader size='sm' />}
@@ -229,12 +217,7 @@ function RollingStocktakeDashboardItem({
         </Alert>
       )}
       {!itemQuery.isLoading && itemQuery.isSuccess && (
-        <RenderStockItem
-          context={context}
-          item={stockItem}
-          onCount={countStockForm.open}
-          onDelete={deleteStockForm.open}
-        />
+        <RenderStockItem context={context} item={stockItem} />
       )}
     </Stack>
   );
