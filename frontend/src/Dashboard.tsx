@@ -84,7 +84,7 @@ function RenderStockItem({
           )}
           {item.creation_date && (
             <Table.Tr>
-              <Table.Th>{t`Created`}</Table.Th>
+              <Table.Th>{t`Creation Date`}</Table.Th>
               <Table.Td>
                 <Text size='sm'>{item.creation_date}</Text>
               </Table.Td>
