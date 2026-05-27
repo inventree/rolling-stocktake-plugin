@@ -28,7 +28,8 @@ import {
   IconTrash
 } from '@tabler/icons-react';
 import { QueryClient, useQuery } from '@tanstack/react-query';
-import { useMemo } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { Creature } from './Creature';
 import { LocalizedComponent } from './locale';
 
 const queryClient = new QueryClient();
@@ -124,6 +125,10 @@ function RollingStocktakeDashboardItem({
     return context.context?.settings?.WEEKLY_LIMIT ?? 0;
   }, [context.context?.settings]);
 
+  const displayCreature = useMemo(() => {
+    return context.context?.settings?.DISPLAY_CREATURE ?? false;
+  }, [context.context?.settings]);
+
   const itemQuery = useQuery(
     {
       enabled: true,
@@ -150,16 +155,31 @@ function RollingStocktakeDashboardItem({
     return item;
   }, [itemQuery.data]);
 
+  const health = useMemo(() => {
+    if (!weeklyLimit) return 0;
+    return (itemQuery.data?.user_count ?? 0) / weeklyLimit;
+  }, [itemQuery.data?.user_count, weeklyLimit]);
+
+  const [justFed, setJustFed] = useState(false);
+  const feedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const onFed = useCallback(() => {
+    itemQuery.refetch();
+    setJustFed(true);
+    if (feedTimer.current) clearTimeout(feedTimer.current);
+    feedTimer.current = setTimeout(() => setJustFed(false), 1500);
+  }, [itemQuery]);
+
   const countStockForm: any = context?.forms.stockActions.countStock({
     items: stockItem ? [stockItem] : [],
     model: ModelType.stockitem,
-    refresh: () => itemQuery.refetch()
+    refresh: onFed
   });
 
   const deleteStockForm = context?.forms.stockActions.deleteStock({
     items: stockItem ? [stockItem] : [],
     model: ModelType.stockitem,
-    refresh: () => itemQuery.refetch()
+    refresh: onFed
   });
 
   return (
@@ -167,43 +187,52 @@ function RollingStocktakeDashboardItem({
       {countStockForm?.modal}
       {deleteStockForm?.modal}
       <Group justify='space-between'>
-        <Title c={context.theme.primaryColor} order={4}>
-          {t`Rolling Stocktake`}
-        </Title>
+        <Group gap='xs' align='center'>
+          {displayCreature && <Creature health={health} justFed={justFed} />}
+          <Title c={context.theme.primaryColor} order={4}>
+            {t`Rolling Stocktake`}
+          </Title>
+        </Group>
         <Group justify='right'>
-          <Tooltip label='View item'>
-            <ActionIcon
-              color='blue'
-              variant='transparent'
-              onClick={(event: any) =>
-                navigateToLink(
-                  getDetailUrl(ModelType.stockitem, stockItem.pk),
-                  context.navigate,
-                  event
-                )
-              }
-            >
-              <IconEye />
-            </ActionIcon>
-          </Tooltip>
-          <Tooltip label='Count item'>
-            <ActionIcon
-              color='green'
-              variant='transparent'
-              onClick={() => countStockForm.open()}
-            >
-              <IconClipboardCheck />
-            </ActionIcon>
-          </Tooltip>
-          <Tooltip label='Delete item'>
-            <ActionIcon
-              color='red'
-              variant='transparent'
-              onClick={() => deleteStockForm.open()}
-            >
-              <IconTrash />
-            </ActionIcon>
-          </Tooltip>
+          {stockItem?.pk && (
+            <Tooltip label='View item'>
+              <ActionIcon
+                color='blue'
+                variant='transparent'
+                onClick={(event: any) =>
+                  navigateToLink(
+                    getDetailUrl(ModelType.stockitem, stockItem.pk),
+                    context.navigate,
+                    event
+                  )
+                }
+              >
+                <IconEye />
+              </ActionIcon>
+            </Tooltip>
+          )}
+          {stockItem?.pk && (
+            <Tooltip label='Count item'>
+              <ActionIcon
+                color='green'
+                variant='transparent'
+                onClick={() => countStockForm.open()}
+              >
+                <IconClipboardCheck />
+              </ActionIcon>
+            </Tooltip>
+          )}
+          {stockItem?.pk && (
+            <Tooltip label='Delete item'>
+              <ActionIcon
+                color='red'
+                variant='transparent'
+                onClick={() => deleteStockForm.open()}
+              >
+                <IconTrash />
+              </ActionIcon>
+            </Tooltip>
+          )}
           <Tooltip label='Refresh'>
             <ActionIcon
               variant='transparent'

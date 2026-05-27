@@ -79,6 +79,12 @@ class RollingStocktake(
             "default": True,
             "validator": bool,
         },
+        "DISPLAY_CREATURE": {
+            "name": "Display Creature",
+            "description": "Display a creature on the dashboard item when there are items to be counted",
+            "default": False,
+            "validator": bool,
+        },
     }
 
     def get_stocktake_count_for_user(self, user):
