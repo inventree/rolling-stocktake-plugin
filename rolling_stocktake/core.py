@@ -1,8 +1,10 @@
 """Support rolling stocktake for InvenTree"""
 
+from datetime import timedelta
 import random
+import structlog
 
-from django.db.models import DateField, Min
+from django.db.models import DateField, Min, Q
 from django.db.models.functions import Cast, Coalesce
 from django.core.validators import MinValueValidator
 
@@ -50,7 +52,14 @@ class RollingStocktake(
     # Scheduled tasks (from ScheduleMixin)
     # Ref: https://docs.inventree.org/en/latest/plugins/mixins/schedule/
     SCHEDULED_TASKS = {
-        # Define your scheduled tasks here...
+        "check_stale_items": {
+            "func": "check_stale_items",
+            "schedule": "D",
+        },
+        "check_non_stale_items": {
+            "func": "check_non_stale_items",
+            "schedule": "D",
+        },
     }
 
     # Plugin settings (from SettingsMixin)
@@ -96,7 +105,175 @@ class RollingStocktake(
             "default": False,
             "validator": bool,
         },
+        "STALE_PERIOD": {
+            "name": "Stale Period",
+            "description": "The number of days after which a stock item requires counting",
+            "default": 365,
+            "units": "days",
+            "validator": [
+                int,
+                MinValueValidator(30),
+            ],
+        },
+        "STALE_STATUS": {
+            "name": "Stale Status",
+            "description": "The stock status which indicates that a stock item is stale and requires counting",
+            "validator": [
+                int,
+                MinValueValidator(1),
+            ],
+        },
     }
+
+    # --- Shared helpers ---
+
+    def _get_stale_config(self):
+        """Return (stale_status, threshold) or (None, None) if the feature is not configured."""
+        from InvenTree.helpers import current_date
+
+        try:
+            stale_status = int(self.get_setting("STALE_STATUS"))
+        except Exception:
+            return None, None
+
+        if not stale_status or stale_status <= 0:
+            return None, None
+
+        stale_period = max(30, int(self.get_setting("STALE_PERIOD", backup_value=365)))
+        threshold = current_date() - timedelta(days=stale_period)
+        return stale_status, threshold
+
+    def _apply_common_filters(self, items):
+        """Apply virtual-part / inactive-part / external-location exclusions to a StockItem queryset."""
+        items = items.exclude(part__virtual=True)
+
+        if self.get_setting("IGNORE_INACTIVE"):
+            items = items.filter(part__active=True)
+
+        if self.get_setting("IGNORE_EXTERNAL", backup_value=True):
+            items = items.exclude(location__external=True)
+
+        return items
+
+    # --- Scheduled tasks ---
+
+    def check_stale_items(self):
+        """Daily task: mark in-stock items as stale when they haven't been counted within the stale period."""
+
+        from stock.models import StockItem
+
+        logger = structlog.get_logger("inventree")
+
+        stale_status, threshold = self._get_stale_config()
+        if stale_status is None:
+            return
+
+        items = StockItem.objects.filter(StockItem.IN_STOCK_FILTER)
+        items = self._apply_common_filters(items)
+
+        # Ensure items are not consumed or otherwise unavailable
+        items = items.filter(quantity__gt=0)
+        items = items.filter(customer__isnull=True)
+        items = items.filter(belongs_to__isnull=True)
+        items = items.filter(consumed_by__isnull=True)
+
+        # Exclude items which are already marked as stale
+        items = items.exclude(status=stale_status)
+        items = items.exclude(status_custom_key=stale_status)
+
+        # Stale: created before threshold AND not counted since threshold
+        stale_items = (
+            items.filter(
+                Q(creation_date__isnull=True) | Q(creation_date__date__lt=threshold)
+            )
+            .filter(Q(stocktake_date__isnull=True) | Q(stocktake_date__lt=threshold))
+            .distinct()
+        )
+
+        for item in stale_items:
+            item.set_status(stale_status)
+            item.save()
+
+        logger.info(
+            f"Marked {stale_items.count()} stock items as stale (status={stale_status})"
+        )
+
+    def check_non_stale_items(self):
+        """Daily task: reset status for stock items which are marked as stale but no longer meet the stale criteria."""
+
+        from stock.models import StockItem
+
+        logger = structlog.get_logger("inventree")
+
+        stale_status, threshold = self._get_stale_config()
+        if stale_status is None:
+            return
+
+        # Find in-stock items that are currently marked as stale
+        items = StockItem.objects.filter(StockItem.IN_STOCK_FILTER)
+        items = items.filter(Q(status=stale_status) | Q(status_custom_key=stale_status))
+
+        # Of those, select items which are NOT actually stale:
+        # created after the threshold, OR counted after the threshold
+        non_stale_items = items.filter(
+            Q(creation_date__date__gte=threshold) | Q(stocktake_date__gte=threshold)
+        )
+
+        count = non_stale_items.count()
+
+        for item in non_stale_items:
+            item.set_status(10)  # StockStatus.OK
+            item.save()
+
+        logger.info(
+            f"Reset {count} stock items to OK status (no longer stale, status={stale_status})"
+        )
+
+    # --- Event handling ---
+
+    # Ref: https://docs.inventree.org/en/latest/plugins/mixins/event/
+    def wants_process_event(self, event: str) -> bool:
+        """Return True if the plugin wants to process the given event."""
+        return event == "stock_stockitem.saved"
+
+    def process_event(self, event: str, **kwargs) -> None:
+        """Process the provided event."""
+        if event == "stock_stockitem.saved":
+            self.on_item_saved(kwargs.get("id"))
+
+    def on_item_saved(self, item_id) -> None:
+        """If a just-counted item carries the stale status but is no longer stale, reset it to OK."""
+        from stock.models import StockItem
+        from stock.status_codes import StockStatus
+
+        logger = structlog.get_logger("inventree")
+
+        stale_status, threshold = self._get_stale_config()
+
+        if stale_status is None:
+            return
+
+        try:
+            item = StockItem.objects.filter(StockItem.IN_STOCK_FILTER).get(pk=item_id)
+        except StockItem.DoesNotExist:
+            return
+
+        # Only act if the item is currently marked as stale
+        if item.status != stale_status and item.status_custom_key != stale_status:
+            return
+
+        # Item is no longer stale if it was recently created or has just been counted
+        recently_created = item.creation_date and item.creation_date.date() >= threshold
+        recently_counted = item.stocktake_date and item.stocktake_date >= threshold
+
+        if recently_created or recently_counted:
+            item.set_status(StockStatus.OK)
+            item.save()
+            logger.info(
+                f"Reset stock item {item_id} to OK status (counted, no longer stale)"
+            )
+
+    # --- Stock selection ---
 
     def get_stocktake_count_for_user(self, user):
         """Return the number of stock items which have been counted by the given user within the current week."""
@@ -124,19 +301,8 @@ class RollingStocktake(
             # Already reached the weekly limit
             return None
 
-        # Start with a list of "in stock" items
         items = StockItem.objects.filter(StockItem.IN_STOCK_FILTER)
-
-        # Exclude virtual parts
-        items = items.exclude(part__virtual=True)
-
-        # Optionally ignore inactive parts
-        if self.get_setting("IGNORE_INACTIVE"):
-            items = items.filter(part__active=True)
-
-        # Optionally filter out items in external locations
-        if self.get_setting("IGNORE_EXTERNAL", backup_value=True):
-            items = items.exclude(location__external=True)
+        items = self._apply_common_filters(items)
 
         # TODO: Filter items based on user subscriptions
 
@@ -169,17 +335,6 @@ class RollingStocktake(
         items = list(items[:pool_size])
 
         return random.choice(items) if items else None
-
-    # Respond to InvenTree events (from EventMixin)
-    # Ref: https://docs.inventree.org/en/latest/plugins/mixins/event/
-    def wants_process_event(self, event: str) -> bool:
-        """Return True if the plugin wants to process the given event."""
-        # Example: only process the 'create part' event
-        return False
-
-    def process_event(self, event: str, *args, **kwargs) -> None:
-        """Process the provided event."""
-        ...
 
     # Custom URL endpoints (from UrlsMixin)
     # Ref: https://docs.inventree.org/en/latest/plugins/mixins/urls/
