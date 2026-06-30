@@ -238,7 +238,7 @@ class RollingStocktake(
         """Return True if the plugin wants to process the given event."""
         return event == self.COUNTED_EVENT
 
-    def process_event(self, event: str, **kwargs) -> None:
+    def process_event(self, event: str, *args, **kwargs) -> None:
         """Process the provided event."""
         if event == self.COUNTED_EVENT:
             if id := kwargs.get("id"):
