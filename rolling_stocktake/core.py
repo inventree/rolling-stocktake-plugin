@@ -164,7 +164,7 @@ class RollingStocktake(
         # Stale: created before threshold AND not counted since threshold
         stale_items = (
             items.filter(
-                creation_date__date__lt=threshold,
+                Q(creation_date__isnull=True) | Q(creation_date__date__lt=threshold)
             )
             .filter(Q(stocktake_date__isnull=True) | Q(stocktake_date__lt=threshold))
             .distinct()
