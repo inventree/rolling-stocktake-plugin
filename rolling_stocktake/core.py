@@ -49,6 +49,8 @@ class RollingStocktake(
     MIN_VERSION = "1.1.0"
     MAX_VERSION = "2.0.0"
 
+    COUNTED_EVENT = "stockitem.counted"
+
     # Scheduled tasks (from ScheduleMixin)
     # Ref: https://docs.inventree.org/en/latest/plugins/mixins/schedule/
     SCHEDULED_TASKS = {
@@ -234,12 +236,13 @@ class RollingStocktake(
     # Ref: https://docs.inventree.org/en/latest/plugins/mixins/event/
     def wants_process_event(self, event: str) -> bool:
         """Return True if the plugin wants to process the given event."""
-        return event == "stock_stockitem.saved"
+        return event == self.COUNTED_EVENT
 
     def process_event(self, event: str, **kwargs) -> None:
         """Process the provided event."""
-        if event == "stock_stockitem.saved":
-            self.on_item_saved(kwargs.get("id"))
+        if event == self.COUNTED_EVENT:
+            if id := kwargs.get("id"):
+                self.on_item_saved(id)
 
     def on_item_saved(self, item_id) -> None:
         """If a just-counted item carries the stale status but is no longer stale, reset it to OK."""
