@@ -360,23 +360,43 @@ class RollingStocktake(
         if not request.user or not request.user.is_staff:
             return []
 
-        items = []
+        settings = self.get_settings_dict()
 
-        items.append({
-            "key": "rolling-stocktake-dashboard",
-            "title": "Rolling Stocktake",
-            "description": "Display a stock item which needs to be counted next",
-            "icon": "ti:dashboard:outline",
-            "source": self.plugin_static_file(
-                "Dashboard.js:renderRollingStocktakeDashboardItem"
-            ),
-            "context": {
-                "settings": self.get_settings_dict(),
-            },
-            "options": {
-                "width": 4,
-                "height": 3,
-            },
-        })
+        items = [
+            {
+                "key": "rolling-stocktake-dashboard",
+                "title": "Rolling Stocktake",
+                "description": "Display a stock item which needs to be counted next",
+                "icon": "ti:dashboard:outline",
+                "source": self.plugin_static_file(
+                    "Dashboard.js:renderRollingStocktakeDashboardItem"
+                ),
+                "context": {
+                    "settings": settings,
+                },
+                "options": {
+                    "width": 4,
+                    "height": 3,
+                },
+            }
+        ]
+
+        if self.get_setting("STALE_STATUS"):
+            items.append({
+                "key": "rolling-stocktake-count",
+                "title": "Requires Stocktake",
+                "description": "Display a count of stock items which require stocktake",
+                "icon": "ti:clipboard-list:outline",
+                "source": self.plugin_static_file(
+                    "Dashboard.js:renderStocktakeCountWidget"
+                ),
+                "context": {
+                    "settings": settings,
+                },
+                "options": {
+                    "width": 2,
+                    "height": 1,
+                },
+            })
 
         return items
