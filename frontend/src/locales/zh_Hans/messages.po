@@ -72,3 +72,7 @@ msgstr ""
 #: src/Dashboard.tsx
 msgid "Error loading stock information from server."
 msgstr ""
+
+#: src/Dashboard.tsx
+msgid "Requires Stocktake"
+msgstr ""
