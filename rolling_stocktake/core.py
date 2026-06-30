@@ -56,6 +56,10 @@ class RollingStocktake(
             "func": "check_stale_items",
             "schedule": "D",
         },
+        "check_non_stale_items": {
+            "func": "check_non_stale_items",
+            "schedule": "D",
+        },
     }
 
     # Plugin settings (from SettingsMixin)
@@ -176,6 +180,47 @@ class RollingStocktake(
 
         logger.info(
             f"Marked {stale_items.count()} stock items as stale (status={stale_status})"
+        )
+
+    def check_non_stale_items(self):
+        """Daily task: reset status for stock items which are marked as stale but no longer meet the stale criteria."""
+
+        from InvenTree.helpers import current_date
+        from stock.models import StockItem
+        from stock.status_codes import StockStatus
+
+        logger = structlog.get_logger("inventree")
+
+        try:
+            stale_status = int(self.get_setting("STALE_STATUS"))
+        except Exception:
+            logger.error("Invalid stale status setting")
+            return
+
+        if not stale_status or stale_status <= 0:
+            return
+
+        stale_period = int(self.get_setting("STALE_PERIOD", backup_value=365))
+        threshold = current_date() - timedelta(days=stale_period)
+
+        # Find in-stock items that are currently marked as stale
+        items = StockItem.objects.filter(StockItem.IN_STOCK_FILTER)
+        items = items.filter(Q(status=stale_status) | Q(status_custom_key=stale_status))
+
+        # Of those, select items which are NOT actually stale:
+        # created after the threshold, OR counted after the threshold
+        non_stale_items = items.filter(
+            Q(creation_date__date__gte=threshold) | Q(stocktake_date__gte=threshold)
+        )
+
+        count = non_stale_items.count()
+
+        for item in non_stale_items:
+            item.set_status(StockStatus.OK)
+            item.save()
+
+        logger.info(
+            f"Reset {count} stock items to OK status (no longer stale, status={stale_status})"
         )
 
     def get_stocktake_count_for_user(self, user):
