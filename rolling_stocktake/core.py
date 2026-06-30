@@ -96,6 +96,16 @@ class RollingStocktake(
             "default": False,
             "validator": bool,
         },
+        "STALE_PERIOD": {
+            "name": "Stale Period",
+            "description": "The number of days after which a stock item requires counting",
+            "default": 365,
+            "units": "days",
+            "validator": [
+                int,
+                MinValueValidator(1),
+            ],
+        },
     }
 
     def get_stocktake_count_for_user(self, user):
