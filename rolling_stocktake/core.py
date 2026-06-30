@@ -1,8 +1,10 @@
 """Support rolling stocktake for InvenTree"""
 
+from datetime import timedelta
 import random
+import structlog
 
-from django.db.models import DateField, Min
+from django.db.models import DateField, Min, Q
 from django.db.models.functions import Cast, Coalesce
 from django.core.validators import MinValueValidator
 
@@ -50,7 +52,10 @@ class RollingStocktake(
     # Scheduled tasks (from ScheduleMixin)
     # Ref: https://docs.inventree.org/en/latest/plugins/mixins/schedule/
     SCHEDULED_TASKS = {
-        # Define your scheduled tasks here...
+        "check_stale_items": {
+            "func": "check_stale_items",
+            "schedule": "D",
+        },
     }
 
     # Plugin settings (from SettingsMixin)
@@ -106,7 +111,72 @@ class RollingStocktake(
                 MinValueValidator(1),
             ],
         },
+        "STALE_STATUS": {
+            "name": "Stale Status",
+            "description": "The stock status which indicates that a stock item is stale and requires counting",
+            "validator": [
+                int,
+                MinValueValidator(1),
+            ],
+        },
     }
+
+    def check_stale_items(self):
+        """Daily task: log stale stock items that have not been counted within the stale period."""
+
+        from InvenTree.helpers import current_date
+        from stock.models import StockItem
+
+        logger = structlog.get_logger("inventree")
+
+        try:
+            stale_status = int(self.get_setting("STALE_STATUS"))
+        except Exception:
+            logger.error("Invalid stale status setting")
+            return
+
+        if not stale_status or stale_status <= 0:
+            return
+
+        stale_period = int(self.get_setting("STALE_PERIOD", backup_value=365))
+        threshold = current_date() - timedelta(days=stale_period)
+
+        # Find any in-stock, non-virtual stock items
+        items = StockItem.objects.filter(StockItem.IN_STOCK_FILTER)
+        items = items.exclude(part__virtual=True)
+
+        if self.get_setting("IGNORE_INACTIVE"):
+            items = items.filter(part__active=True)
+
+        if self.get_setting("IGNORE_EXTERNAL", backup_value=True):
+            items = items.exclude(location__external=True)
+
+        # Ensure items are not consumed or otherwise unavailable
+        items = items.filter(quantity__gt=0)
+        items = items.filter(customer__isnull=True)
+        items = items.filter(belongs_to__isnull=True)
+        items = items.filter(consumed_by__isnull=True)
+
+        # Exclude items which are already marked as stale
+        items = items.exclude(status=stale_status)
+        items = items.exclude(status_custom_key=stale_status)
+
+        # Stale: created before threshold AND not counted since threshold
+        stale_items = (
+            items.filter(
+                creation_date__date__lt=threshold,
+            )
+            .filter(Q(stocktake_date__isnull=True) | Q(stocktake_date__lt=threshold))
+            .distinct()
+        )
+
+        for item in stale_items:
+            item.set_status(stale_status)
+            item.save()
+
+        logger.info(
+            f"Marked {stale_items.count()} stock items as stale (status={stale_status})"
+        )
 
     def get_stocktake_count_for_user(self, user):
         """Return the number of stock items which have been counted by the given user within the current week."""
