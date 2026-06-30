@@ -112,7 +112,7 @@ class RollingStocktake(
             "units": "days",
             "validator": [
                 int,
-                MinValueValidator(1),
+                MinValueValidator(30),
             ],
         },
         "STALE_STATUS": {
@@ -139,7 +139,7 @@ class RollingStocktake(
         if not stale_status or stale_status <= 0:
             return None, None
 
-        stale_period = int(self.get_setting("STALE_PERIOD", backup_value=365))
+        stale_period = max(30, int(self.get_setting("STALE_PERIOD", backup_value=365)))
         threshold = current_date() - timedelta(days=stale_period)
         return stale_status, threshold
 
