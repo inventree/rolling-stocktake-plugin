@@ -4,7 +4,8 @@ import {
   getDetailUrl,
   type InvenTreePluginContext,
   ModelType,
-  navigateToLink
+  navigateToLink,
+  StylishText
 } from '@inventreedb/ui';
 import { t } from '@lingui/core/macro';
 import {
@@ -14,6 +15,7 @@ import {
   Group,
   LoadingOverlay,
   Progress,
+  RollingNumber,
   Stack,
   Table,
   Text,
@@ -23,16 +25,15 @@ import {
 import {
   IconCircleCheck,
   IconClipboardCheck,
+  IconClipboardList,
   IconEye,
   IconRefresh,
   IconTrash
 } from '@tabler/icons-react';
-import { QueryClient, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { Creature } from './Creature';
 import { LocalizedComponent } from './locale';
-
-const queryClient = new QueryClient();
 
 const NEXT_ITEM_URL: string = '/plugin/rolling-stocktake/next/';
 
@@ -138,7 +139,7 @@ function RollingStocktakeDashboardItem({
         return response.data;
       }
     },
-    queryClient
+    context.queryClient
   );
 
   const stockItem = useMemo(() => {
@@ -261,6 +262,60 @@ function RollingStocktakeDashboardItem({
   );
 }
 
+function StocktakeCountWidget({
+  context
+}: {
+  context: InvenTreePluginContext;
+}) {
+  const staleStatus = context.context?.settings?.STALE_STATUS;
+
+  const countQuery = useQuery(
+    {
+      queryKey: ['stocktake-requires-count', staleStatus],
+      enabled: !!staleStatus,
+      refetchInterval: 10 * 60 * 1000,
+      staleTime: 5 * 60 * 1000,
+      queryFn: async () => {
+        const response = await context.api?.get('/api/stock/', {
+          params: { status: staleStatus, in_stock: true, limit: 1 }
+        });
+        return response?.data?.count ?? 0;
+      }
+    },
+    context.queryClient
+  );
+
+  const onNavigate = useCallback(
+    (event: any) => {
+      navigateToLink(
+        `/stock/location/index/stock-items?status=${staleStatus}`,
+        context.navigate,
+        event
+      );
+    },
+    [staleStatus, context.navigate]
+  );
+
+  return (
+    <Group
+      justify='space-between'
+      align='center'
+      style={{ height: '100%', cursor: 'pointer' }}
+      onClick={onNavigate}
+    >
+      <Group gap='xs'>
+        <IconClipboardList />
+        <StylishText size='md'>{t`Requires Stocktake`}</StylishText>
+      </Group>
+      <RollingNumber
+        c={context.theme.primaryColor}
+        value={countQuery.isFetching ? 0 : countQuery.data}
+        fz='20px'
+      />
+    </Group>
+  );
+}
+
 // This is the function which is called by InvenTree to render the actual dashboard
 //  component
 export function renderRollingStocktakeDashboardItem(
@@ -270,6 +325,15 @@ export function renderRollingStocktakeDashboardItem(
   return (
     <LocalizedComponent locale={context.locale}>
       <RollingStocktakeDashboardItem context={context} />
+    </LocalizedComponent>
+  );
+}
+
+export function renderStocktakeCountWidget(context: InvenTreePluginContext) {
+  checkPluginVersion(context);
+  return (
+    <LocalizedComponent locale={context.locale}>
+      <StocktakeCountWidget context={context} />
     </LocalizedComponent>
   );
 }

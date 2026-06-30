@@ -73,6 +73,10 @@ msgstr "Rolling Stocktake"
 msgid "Error loading stock information from server."
 msgstr "Error loading stock information from server."
 
+#: src/Dashboard.tsx
+msgid "Requires Stocktake"
+msgstr "Requires Stocktake"
+
 #: src/Panel.tsx
 #~ msgid "Translated Text"
 #~ msgstr "Translated Text"
