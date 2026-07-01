@@ -288,7 +288,7 @@ function StocktakeCountWidget({
   const onNavigate = useCallback(
     (event: any) => {
       navigateToLink(
-        `/stock/location/index/stock-items?status=${staleStatus}`,
+        `/stock/location/index/stock-items?in_stock=true&status=${staleStatus}`,
         context.navigate,
         event
       );
